@@ -59,7 +59,11 @@ const Login = () => {
 
   const handlePartnerSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    toast({ title: "Заявка отправлена!", description: "Мы свяжемся с вами в ближайшее время." });
+    toast({
+      title: "Заявка принята! 🎉",
+      description: "Мы проверим данные и отправим доступ на ваш email в течение 24 часов. Если возникнут вопросы — пишите на agent@aventuramania.ru",
+      className: "bg-card border-2 border-primary text-foreground",
+    });
     setPartnerOpen(false);
     setPartnerForm({ name: "", email: "", phone: "", experience: "" });
   };
