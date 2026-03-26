@@ -120,13 +120,21 @@ const Login = () => {
           </button>
         </form>
 
-        <div className="text-center">
+        <div className="text-center space-y-2">
           <button
             onClick={() => setPartnerOpen(true)}
             className="text-primary hover:text-gold-glow underline underline-offset-4 text-sm transition-colors"
           >
             Хочу стать партнёром
           </button>
+          <div>
+            <a
+              href="/instructions"
+              className="text-muted-foreground hover:text-primary underline underline-offset-4 text-xs transition-colors"
+            >
+              Инструкция для партнёров
+            </a>
+          </div>
         </div>
       </div>
 
