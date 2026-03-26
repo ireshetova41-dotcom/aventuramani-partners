@@ -12,8 +12,8 @@ const ParticlesBackground = () => {
     let animId: number;
     const particles: { x: number; y: number; vx: number; vy: number; r: number; alpha: number }[] = [];
     const PARTICLE_COUNT = 70;
-    const CONNECT_DIST = 140;
-    const goldH = 44, goldS = 78, goldL = 76;
+    const CONNECT_DIST = 130;
+    const goldH = 44, goldS = 78, goldL = 72;
 
     const resize = () => {
       canvas.width = canvas.offsetWidth * devicePixelRatio;
@@ -29,8 +29,8 @@ const ParticlesBackground = () => {
           y: Math.random() * h,
           vx: (Math.random() - 0.5) * 0.55,
           vy: (Math.random() - 0.5) * 0.55,
-          r: Math.random() * 2.2 + 1,
-          alpha: Math.random() * 0.4 + 0.45,
+          r: Math.random() * 2 + 0.8,
+          alpha: Math.random() * 0.3 + 0.3,
         });
       }
     };
@@ -46,9 +46,9 @@ const ParticlesBackground = () => {
           const dy = particles[i].y - particles[j].y;
           const dist = Math.sqrt(dx * dx + dy * dy);
           if (dist < CONNECT_DIST) {
-            const opacity = (1 - dist / CONNECT_DIST) * 0.3;
+            const opacity = (1 - dist / CONNECT_DIST) * 0.18;
             ctx.strokeStyle = `hsla(${goldH}, ${goldS}%, ${goldL}%, ${opacity})`;
-            ctx.lineWidth = 0.8;
+            ctx.lineWidth = 0.6;
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
