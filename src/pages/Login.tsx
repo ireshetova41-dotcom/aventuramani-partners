@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import GeoBackground from "@/components/GeoBackground";
+import ParticlesBackground from "@/components/ParticlesBackground";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -66,7 +66,7 @@ const Login = () => {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-background px-4 overflow-hidden">
-      <GeoBackground />
+      <ParticlesBackground />
       <div className="relative z-10 w-full max-w-md space-y-8">
         <div className="text-center space-y-2">
           <h1 className="text-4xl font-bold tracking-tight text-primary">AVENTURAMANIA</h1>
