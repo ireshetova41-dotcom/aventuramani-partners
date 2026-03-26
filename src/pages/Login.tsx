@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,18 +11,49 @@ const Login = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const [partnerOpen, setPartnerOpen] = useState(false);
+  const [signupMode, setSignupMode] = useState(false);
+  const [signupName, setSignupName] = useState("");
   const [partnerForm, setPartnerForm] = useState({ name: "", email: "", phone: "", experience: "" });
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
       toast({ title: "Заполните все поля", variant: "destructive" });
       return;
     }
-    // Demo login
-    localStorage.setItem("aventura_user", JSON.stringify({ name: "Алексей", email }));
-    navigate("/dashboard");
+    setLoading(true);
+
+    if (signupMode) {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { display_name: signupName } },
+      });
+      setLoading(false);
+      if (error) {
+        toast({ title: "Ошибка регистрации", description: error.message, variant: "destructive" });
+        return;
+      }
+      toast({ title: "Регистрация успешна!", description: "Проверьте email для подтверждения." });
+      setSignupMode(false);
+      return;
+    }
+
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    setLoading(false);
+    if (error) {
+      toast({ title: "Ошибка входа", description: error.message, variant: "destructive" });
+      return;
+    }
+
+    // Check if admin
+    const { data: isAdmin } = await supabase.rpc("has_role", {
+      _user_id: data.user.id,
+      _role: "admin",
+    });
+    navigate(isAdmin ? "/admin" : "/dashboard");
   };
 
   const handlePartnerSubmit = (e: React.FormEvent) => {
@@ -40,6 +72,18 @@ const Login = () => {
         </div>
 
         <form onSubmit={handleLogin} className="bg-card rounded-2xl p-8 space-y-5 border border-border">
+          {signupMode && (
+            <div className="space-y-2">
+              <label className="text-sm text-muted-foreground">Имя</label>
+              <Input
+                placeholder="Ваше имя"
+                value={signupName}
+                onChange={(e) => setSignupName(e.target.value)}
+                className="bg-secondary border-border"
+                required
+              />
+            </div>
+          )}
           <div className="space-y-2">
             <label className="text-sm text-muted-foreground">Email</label>
             <Input
@@ -60,9 +104,20 @@ const Login = () => {
               className="bg-secondary border-border"
             />
           </div>
-          <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-gold-glow font-semibold text-base h-12">
-            Войти
+          <Button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-primary text-primary-foreground hover:bg-gold-glow font-semibold text-base h-12"
+          >
+            {loading ? "Загрузка..." : signupMode ? "Зарегистрироваться" : "Войти"}
           </Button>
+          <button
+            type="button"
+            onClick={() => setSignupMode(!signupMode)}
+            className="w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {signupMode ? "Уже есть аккаунт? Войти" : "Нет аккаунта? Зарегистрироваться"}
+          </button>
         </form>
 
         <div className="text-center">
@@ -81,34 +136,10 @@ const Login = () => {
             <DialogTitle className="text-primary text-xl">Заявка на партнёрство</DialogTitle>
           </DialogHeader>
           <form onSubmit={handlePartnerSubmit} className="space-y-4">
-            <Input
-              placeholder="Ваше имя"
-              value={partnerForm.name}
-              onChange={(e) => setPartnerForm({ ...partnerForm, name: e.target.value })}
-              className="bg-secondary border-border"
-              required
-            />
-            <Input
-              type="email"
-              placeholder="Email"
-              value={partnerForm.email}
-              onChange={(e) => setPartnerForm({ ...partnerForm, email: e.target.value })}
-              className="bg-secondary border-border"
-              required
-            />
-            <Input
-              placeholder="Телефон"
-              value={partnerForm.phone}
-              onChange={(e) => setPartnerForm({ ...partnerForm, phone: e.target.value })}
-              className="bg-secondary border-border"
-              required
-            />
-            <Textarea
-              placeholder="Опыт в туризме"
-              value={partnerForm.experience}
-              onChange={(e) => setPartnerForm({ ...partnerForm, experience: e.target.value })}
-              className="bg-secondary border-border min-h-[80px]"
-            />
+            <Input placeholder="Ваше имя" value={partnerForm.name} onChange={(e) => setPartnerForm({ ...partnerForm, name: e.target.value })} className="bg-secondary border-border" required />
+            <Input type="email" placeholder="Email" value={partnerForm.email} onChange={(e) => setPartnerForm({ ...partnerForm, email: e.target.value })} className="bg-secondary border-border" required />
+            <Input placeholder="Телефон" value={partnerForm.phone} onChange={(e) => setPartnerForm({ ...partnerForm, phone: e.target.value })} className="bg-secondary border-border" required />
+            <Textarea placeholder="Опыт в туризме" value={partnerForm.experience} onChange={(e) => setPartnerForm({ ...partnerForm, experience: e.target.value })} className="bg-secondary border-border min-h-[80px]" />
             <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-gold-glow font-semibold h-11">
               Отправить заявку
             </Button>
