@@ -41,7 +41,7 @@ serve(async (req) => {
           <div style="font-family: Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 30px; background: #ffffff; border-radius: 12px;">
             <h2 style="color: #1A1A2E; margin-bottom: 16px;">Здравствуйте, ${name}!</h2>
             <p style="color: #333; line-height: 1.6;">
-              Ваша заявка на партнёрство получена. Мы проверим данные и отправим доступ на ваш email в течение 24 часов.
+              Ваша заявка на партнёрство принята! Доступ к платформе подтверждён — вы можете войти в личный кабинет прямо сейчас.
             </p>
             <p style="color: #333; line-height: 1.6;">
               Если возникнут вопросы — пишите на <a href="mailto:agent@aventuramania.ru" style="color: #C6A55A;">agent@aventuramania.ru</a>
