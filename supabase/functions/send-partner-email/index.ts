@@ -56,6 +56,10 @@ serve(async (req) => {
     if (!agentEmailRes.ok) {
       const err = await agentEmailRes.text();
       console.error("Failed to send agent email:", err);
+      return new Response(
+        JSON.stringify({ error: "Не удалось отправить письмо с подтверждением", details: err }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     // 2. Email to admin
@@ -88,6 +92,10 @@ serve(async (req) => {
     if (!adminEmailRes.ok) {
       const err = await adminEmailRes.text();
       console.error("Failed to send admin email:", err);
+      return new Response(
+        JSON.stringify({ error: "Письмо агенту отправлено, но уведомление администратору не ушло", details: err }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     return new Response(

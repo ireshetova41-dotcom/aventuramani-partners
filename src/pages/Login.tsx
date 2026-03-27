@@ -60,25 +60,30 @@ const Login = () => {
   const handlePartnerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const { error } = await supabase.functions.invoke("send-partner-email", {
+      const { data, error } = await supabase.functions.invoke("send-partner-email", {
         body: partnerForm,
       });
+
       if (error) throw error;
+      if (!data?.success) {
+        throw new Error(data?.error || "Не удалось отправить письмо с подтверждением");
+      }
+
       toast({
         title: "Заявка принята! 🎉",
-        description: "Доступ подтверждён — вы можете войти прямо сейчас. Письмо с деталями отправлено на ваш email.",
+        description: "Письмо с подтверждением отправлено на ваш email.",
         className: "bg-card border-2 border-primary text-foreground",
       });
+      setPartnerOpen(false);
+      setPartnerForm({ name: "", email: "", phone: "", experience: "" });
     } catch (err) {
       console.error("Email send error:", err);
       toast({
-        title: "Заявка принята! 🎉",
-        description: "Доступ подтверждён — вы можете войти прямо сейчас. Письмо с деталями отправлено на ваш email.",
-        className: "bg-card border-2 border-primary text-foreground",
+        title: "Не удалось отправить письмо",
+        description: err instanceof Error ? err.message : "Попробуйте ещё раз или напишите на agent@aventuramania.ru",
+        variant: "destructive",
       });
     }
-    setPartnerOpen(false);
-    setPartnerForm({ name: "", email: "", phone: "", experience: "" });
   };
 
   return (
