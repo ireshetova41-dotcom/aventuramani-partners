@@ -34,7 +34,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Aventuramania Partners <onboarding@resend.dev>",
+        from: "Aventuramania Partners <partners@aventuramania.ru>",
         to: [email],
         subject: "Заявка принята — Aventuramania Partners",
         html: `
@@ -66,7 +66,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Aventuramania Partners <onboarding@resend.dev>",
+        from: "Aventuramania Partners <partners@aventuramania.ru>",
         to: ["agent@aventuramania.ru"],
         subject: "Новая заявка агента",
         html: `
