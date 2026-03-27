@@ -37,7 +37,13 @@ const Login = () => {
         toast({ title: "Ошибка регистрации", description: error.message, variant: "destructive" });
         return;
       }
-      toast({ title: "Регистрация успешна!", description: "Проверьте email для подтверждения." });
+
+      // Send welcome email (non-blocking)
+      supabase.functions.invoke("send-welcome-email", {
+        body: { email, name: signupName },
+      }).catch((err) => console.error("Welcome email error:", err));
+
+      toast({ title: "Регистрация успешна!", description: "Проверьте email — мы отправили приветственное письмо." });
       setSignupMode(false);
       return;
     }
