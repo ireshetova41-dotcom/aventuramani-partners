@@ -57,13 +57,26 @@ const Login = () => {
     navigate(isAdmin ? "/admin" : "/dashboard");
   };
 
-  const handlePartnerSubmit = (e: React.FormEvent) => {
+  const handlePartnerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Заявка принята! 🎉",
-      description: "Мы проверим данные и отправим доступ на ваш email в течение 24 часов. Если возникнут вопросы — пишите на agent@aventuramania.ru",
-      className: "bg-card border-2 border-primary text-foreground",
-    });
+    try {
+      const { error } = await supabase.functions.invoke("send-partner-email", {
+        body: partnerForm,
+      });
+      if (error) throw error;
+      toast({
+        title: "Заявка принята! 🎉",
+        description: "Мы проверим данные и отправим доступ на ваш email в течение 24 часов. Если возникнут вопросы — пишите на agent@aventuramania.ru",
+        className: "bg-card border-2 border-primary text-foreground",
+      });
+    } catch (err) {
+      console.error("Email send error:", err);
+      toast({
+        title: "Заявка принята! 🎉",
+        description: "Мы проверим данные и отправим доступ на ваш email в течение 24 часов. Если возникнут вопросы — пишите на agent@aventuramania.ru",
+        className: "bg-card border-2 border-primary text-foreground",
+      });
+    }
     setPartnerOpen(false);
     setPartnerForm({ name: "", email: "", phone: "", experience: "" });
   };
