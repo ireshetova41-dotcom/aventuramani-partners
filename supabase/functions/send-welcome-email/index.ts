@@ -35,26 +35,26 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Aventura Mania <partners@aventuramania.ru>",
+        from: "Авентурамания <partners@aventuramania.ru>",
         to: [email],
-        subject: "Регистрация в Aventura Mania подтверждена",
+        subject: "Регистрация в ЛК партнера Авентурамания подтверждена",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 30px; background: #ffffff; border-radius: 12px;">
             <h2 style="color: #1A1A2E; margin-bottom: 16px;">Добро пожаловать, ${displayName}!</h2>
             <p style="color: #333; line-height: 1.7; font-size: 15px;">
-              Добро пожаловать в партнёрскую сеть <strong>Aventura Mania</strong>!
+              Добро пожаловать в партнёрскую сеть <strong>Авентурамания</strong>!
             </p>
             <p style="color: #333; line-height: 1.7; font-size: 15px;">
-              Ваш личный кабинет активирован. Войдите и начните продавать туры прямо сейчас.
+              Ваш личный кабинет активирован. Войдите и начните продавать туры прямо сейчас:
             </p>
             <div style="text-align: center; margin: 28px 0;">
-              <a href="https://aventuramani-partners.lovable.app/"
+              <a href="https://aventuramani-partners.lovable.app/dashboard"
                  style="display: inline-block; background: #D4AF37; color: #1A1A2E; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: bold; font-size: 15px;">
                 Войти в личный кабинет
               </a>
             </div>
             <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
-            <p style="color: #999; font-size: 12px;">Aventura Mania Partners</p>
+            <p style="color: #999; font-size: 12px;">Авентурамания Partners</p>
           </div>
         `,
       }),
