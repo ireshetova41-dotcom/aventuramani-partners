@@ -60,17 +60,19 @@ serve(async (req) => {
       }),
     });
 
+    const resBody = await res.text();
+    console.log("Resend response status:", res.status, "body:", resBody);
+
     if (!res.ok) {
-      const err = await res.text();
-      console.error("Failed to send welcome email:", err);
+      console.error("Failed to send welcome email:", resBody);
       return new Response(
-        JSON.stringify({ error: "Failed to send welcome email", details: err }),
+        JSON.stringify({ error: "Failed to send welcome email", details: resBody }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     return new Response(
-      JSON.stringify({ success: true }),
+      JSON.stringify({ success: true, resend: resBody }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
