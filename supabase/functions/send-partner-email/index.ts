@@ -36,15 +36,15 @@ serve(async (req) => {
       body: JSON.stringify({
         from: "Aventuramania Partners <partners@aventuramania.ru>",
         to: [email],
-        subject: "Заявка принята — Aventuramania Partners",
+        subject: "Ваша заявка принята",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 30px; background: #ffffff; border-radius: 12px;">
             <h2 style="color: #1A1A2E; margin-bottom: 16px;">Здравствуйте, ${name}!</h2>
             <p style="color: #333; line-height: 1.6;">
-              Ваша заявка на партнёрство принята! Доступ к платформе подтверждён — вы можете войти в личный кабинет прямо сейчас.
+              Ваша заявка получена. Мы свяжемся с вами в ближайшее время.
             </p>
             <p style="color: #333; line-height: 1.6;">
-              Если возникнут вопросы — пишите на <a href="mailto:agent@aventuramania.ru" style="color: #C6A55A;">agent@aventuramania.ru</a>
+              С уважением, команда <strong>Aventuramania</strong>
             </p>
             <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
             <p style="color: #999; font-size: 12px;">Aventuramania Partners</p>
