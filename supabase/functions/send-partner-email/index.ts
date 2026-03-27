@@ -71,7 +71,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         from: "Aventuramania Partners <partners@aventuramania.ru>",
-        to: ["agent@aventuramania.ru"],
+        to: ["partners@aventuramania.ru"],
         subject: "Новая заявка агента",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 30px; background: #ffffff; border-radius: 12px;">
