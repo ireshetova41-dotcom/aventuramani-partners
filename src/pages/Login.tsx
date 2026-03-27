@@ -66,14 +66,14 @@ const Login = () => {
       if (error) throw error;
       toast({
         title: "Заявка принята! 🎉",
-        description: "Мы проверим данные и отправим доступ на ваш email в течение 24 часов. Если возникнут вопросы — пишите на agent@aventuramania.ru",
+        description: "Доступ подтверждён — вы можете войти прямо сейчас. Письмо с деталями отправлено на ваш email.",
         className: "bg-card border-2 border-primary text-foreground",
       });
     } catch (err) {
       console.error("Email send error:", err);
       toast({
         title: "Заявка принята! 🎉",
-        description: "Мы проверим данные и отправим доступ на ваш email в течение 24 часов. Если возникнут вопросы — пишите на agent@aventuramania.ru",
+        description: "Доступ подтверждён — вы можете войти прямо сейчас. Письмо с деталями отправлено на ваш email.",
         className: "bg-card border-2 border-primary text-foreground",
       });
     }
