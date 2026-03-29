@@ -188,7 +188,7 @@ const Login = () => {
           )}
           <Button
             type="submit"
-            disabled={loading || (signupMode && !consentPD)}
+            disabled={loading || (signupMode && (!consentPD || !consentPolicy))}
             className="w-full bg-primary text-primary-foreground hover:bg-gold-glow font-semibold text-base h-12"
           >
             {loading ? "Загрузка..." : signupMode ? "Зарегистрироваться" : "Войти"}
