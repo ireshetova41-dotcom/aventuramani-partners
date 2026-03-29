@@ -142,6 +142,21 @@ const Login = () => {
             <div className="space-y-3">
               <div className="flex items-start space-x-2">
                 <Checkbox
+                  id="consentPolicy"
+                  checked={consentPolicy}
+                  onCheckedChange={(v) => setConsentPolicy(v === true)}
+                  className="mt-0.5"
+                />
+                <label htmlFor="consentPolicy" className="text-xs text-muted-foreground leading-tight">
+                  Ознакомлен(а) с{" "}
+                  <a href="https://aventuramania.ru/politika" target="_blank" rel="noopener" className="text-primary underline underline-offset-2">
+                    Политикой обработки персональных данных
+                  </a>{" "}
+                  <span className="text-destructive">*</span>
+                </label>
+              </div>
+              <div className="flex items-start space-x-2">
+                <Checkbox
                   id="consentPD"
                   checked={consentPD}
                   onCheckedChange={(v) => setConsentPD(v === true)}
