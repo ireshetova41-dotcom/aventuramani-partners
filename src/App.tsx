@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Login from "./pages/Login.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
 import Admin from "./pages/Admin.tsx";
+import Catalog from "./pages/Catalog.tsx";
 import Instructions from "./pages/Instructions.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
