@@ -195,7 +195,7 @@ const Login = () => {
           </Button>
           <button
             type="button"
-            onClick={() => { setSignupMode(!signupMode); setConsentPD(false); setConsentAds(false); }}
+            onClick={() => { setSignupMode(!signupMode); setConsentPD(false); setConsentPolicy(false); setConsentAds(false); }}
             className="w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             {signupMode ? "Уже есть аккаунт? Войти" : "Нет аккаунта? Зарегистрироваться"}
