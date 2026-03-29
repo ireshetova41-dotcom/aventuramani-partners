@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { LogOut, User, Star } from "lucide-react";
+import { LogOut, User, Star, Download, ExternalLink } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
 import tourKamchatka from "@/assets/tour-kamchatka.jpg";
@@ -24,11 +24,11 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const tours = [
-  { id: 1, name: "Первооткрытие Камчатки", description: "Вулканы, гейзеры и Тихий океан — незабываемое путешествие на край земли.", image: tourKamchatka },
-  { id: 2, name: "Все грани Байкала", description: "Глубочайшее озеро планеты: лёд, тайга и сибирское гостеприимство.", image: tourBaikal },
-  { id: 3, name: "Путешествие на Алтай", description: "Горные перевалы, бирюзовые реки и дикая природа Горного Алтая.", image: tourAltai },
-  { id: 4, name: "Сахалин и Итуруп", description: "Таинственные острова с вулканами, горячими источниками и океаном.", image: tourSakhalin },
-  { id: 5, name: "Южный Китай", description: "Карстовые горы, рисовые террасы и древние храмы юга Поднебесной.", image: tourChina },
+  { id: 1, name: "Первооткрытие Камчатки", description: "Вулканы, гейзеры и Тихий океан — незабываемое путешествие на край земли.", image: tourKamchatka, price: 100, pdfUrl: "/tours/kamchatka.pdf", programUrl: "https://online.flippingbook.com/view/757254969/" },
+  { id: 2, name: "Все грани Байкала", description: "Глубочайшее озеро планеты: лёд, тайга и сибирское гостеприимство.", image: tourBaikal, price: 100, pdfUrl: "/tours/baikal.pdf", programUrl: "https://t.me/c/1579658397/28166" },
+  { id: 3, name: "Путешествие на Алтай", description: "Горные перевалы, бирюзовые реки и дикая природа Горного Алтая.", image: tourAltai, price: 100 },
+  { id: 4, name: "Сахалин и Итуруп", description: "Таинственные острова с вулканами, горячими источниками и океаном.", image: tourSakhalin, price: 100, pdfUrl: "/tours/sakhalin.pdf", programUrl: "https://online.flippingbook.com/view/144259978/" },
+  { id: 5, name: "Южный Китай", description: "Карстовые горы, рисовые террасы и древние храмы юга Поднебесной.", image: tourChina, price: 100, pdfUrl: "/tours/china.pdf", programUrl: "https://online.flippingbook.com/view/363094287/" },
 ];
 
 const Dashboard = () => {
@@ -153,7 +153,28 @@ const Dashboard = () => {
                 <div className="p-4 flex flex-col flex-1 space-y-3">
                   <h4 className="font-semibold text-sm">{tour.name}</h4>
                   <p className="text-muted-foreground text-xs leading-relaxed line-clamp-2">{tour.description}</p>
-                  <Badge className="w-fit bg-primary/20 text-primary border-0 text-xs">Комиссия 10%</Badge>
+                  <div className="flex items-center justify-between">
+                    <Badge className="w-fit bg-primary/20 text-primary border-0 text-xs">Комиссия 10%</Badge>
+                    <span className="text-primary font-bold text-sm">{tour.price} ₽ / чел.</span>
+                  </div>
+                  <div className="flex gap-2">
+                    {tour.pdfUrl && (
+                      <Button asChild variant="outline" size="sm" className="flex-1 text-xs">
+                        <a href={tour.pdfUrl} download>
+                          <Download className="w-3.5 h-3.5 mr-1" />
+                          PDF
+                        </a>
+                      </Button>
+                    )}
+                    {tour.programUrl && (
+                      <Button asChild variant="outline" size="sm" className="flex-1 text-xs">
+                        <a href={tour.programUrl} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="w-3.5 h-3.5 mr-1" />
+                          Программа
+                        </a>
+                      </Button>
+                    )}
+                  </div>
                   <div className="flex-1" />
                   <Button onClick={() => openModal(tour.name)} className="w-full bg-primary text-primary-foreground hover:bg-gold-glow font-medium text-sm h-10">
                     Хочу продавать
