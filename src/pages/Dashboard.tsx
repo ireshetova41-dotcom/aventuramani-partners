@@ -10,8 +10,9 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from "@/hooks/use-toast";
-import { LogOut, User, Star, Download, ExternalLink, CalendarDays, CalendarIcon } from "lucide-react";
+import { LogOut, User, Star, Download, ExternalLink, CalendarDays, CalendarIcon, Copy, Link2, ChevronDown, ChevronUp, AlertCircle, FileText, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -58,10 +59,29 @@ function getPeriodStart(key: PeriodKey): Date | null {
   return new Date(now.getFullYear(), 0, 1);
 }
 
+interface ProfileData {
+  agency_name: string;
+  legal_name: string;
+  inn: string;
+  kpp: string;
+  ogrn: string;
+  legal_address: string;
+  bank_name: string;
+  bik: string;
+  account_number: string;
+  corr_account: string;
+}
+
+const emptyProfileData: ProfileData = {
+  agency_name: "", legal_name: "", inn: "", kpp: "", ogrn: "", legal_address: "",
+  bank_name: "", bik: "", account_number: "", corr_account: "",
+};
+
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [profile, setProfile] = useState<Tables<"profiles"> | null>(null);
+  const [profile, setProfile] = useState<any>(null);
   const [applications, setApplications] = useState<Tables<"applications">[]>([]);
+  const [refApplications, setRefApplications] = useState<Tables<"client_applications">[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedTour, setSelectedTour] = useState("");
   const [form, setForm] = useState({ clientName: "", clientContact: "", dates: "", comment: "", touristsCount: "1" });
@@ -69,6 +89,12 @@ const Dashboard = () => {
   const [period, setPeriod] = useState<PeriodKey>("all");
   const [customFrom, setCustomFrom] = useState<Date | undefined>();
   const [customTo, setCustomTo] = useState<Date | undefined>();
+
+  // Profile editor
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [profileForm, setProfileForm] = useState<ProfileData>(emptyProfileData);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [instructionOpen, setInstructionOpen] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -78,16 +104,36 @@ const Dashboard = () => {
 
       const { data: prof } = await supabase.from("profiles").select("*").eq("user_id", user.id).single();
       setProfile(prof);
+      if (prof) {
+        setProfileForm({
+          agency_name: prof.agency_name || "",
+          legal_name: prof.legal_name || "",
+          inn: prof.inn || "",
+          kpp: prof.kpp || "",
+          ogrn: prof.ogrn || "",
+          legal_address: prof.legal_address || "",
+          bank_name: prof.bank_name || "",
+          bik: prof.bik || "",
+          account_number: prof.account_number || "",
+          corr_account: prof.corr_account || "",
+        });
+      }
 
-      const { data: apps } = await supabase.from("applications").select("*").eq("agent_id", user.id).order("created_at", { ascending: false });
+      const [{ data: apps }, { data: refApps }] = await Promise.all([
+        supabase.from("applications").select("*").eq("agent_id", user.id).order("created_at", { ascending: false }),
+        supabase.from("client_applications").select("*").eq("ref_agent_id", user.id).order("created_at", { ascending: false }),
+      ]);
       setApplications(apps || []);
+      setRefApplications(refApps || []);
     };
     init();
   }, [navigate]);
 
-  const filteredApps = useMemo(() => {
+  const isProfileIncomplete = !profile?.agency_name && !profile?.inn;
+
+  const filterByPeriod = <T extends { created_at: string }>(items: T[]) => {
     if (period === "custom") {
-      return applications.filter((a) => {
+      return items.filter((a) => {
         const d = new Date(a.created_at);
         if (customFrom && d < customFrom) return false;
         if (customTo) {
@@ -99,16 +145,20 @@ const Dashboard = () => {
       });
     }
     const start = getPeriodStart(period);
-    if (!start) return applications;
-    return applications.filter((a) => new Date(a.created_at) >= start);
-  }, [applications, period, customFrom, customTo]);
+    if (!start) return items;
+    return items.filter((a) => new Date(a.created_at) >= start);
+  };
+
+  const filteredApps = useMemo(() => filterByPeriod(applications), [applications, period, customFrom, customTo]);
+  const filteredRefApps = useMemo(() => filterByPeriod(refApplications), [refApplications, period, customFrom, customTo]);
 
   const stats = useMemo(() => {
     const tourPriceMap = new Map(tours.map((t) => [t.name, t.price]));
     let totalSum = 0;
     let totalCommission = 0;
+
     const perApp = filteredApps.map((app) => {
-      const price = tourPriceMap.get(app.tour_name) || 100;
+      const price = tourPriceMap.get(app.tour_name) || 0;
       const count = app.tourists_count || 1;
       const sum = price * count;
       const commission = sum * COMMISSION_RATE;
@@ -116,8 +166,23 @@ const Dashboard = () => {
       totalCommission += commission;
       return { id: app.id, sum, commission };
     });
-    return { totalSum, totalCommission, perApp, count: filteredApps.length };
-  }, [filteredApps]);
+
+    // Ref apps: 1 tourist assumed
+    const perRefApp = filteredRefApps.map((app) => {
+      const price = tourPriceMap.get(app.tour_name) || 0;
+      const sum = price;
+      const commission = sum * COMMISSION_RATE;
+      totalSum += sum;
+      totalCommission += commission;
+      return { id: app.id, sum, commission };
+    });
+
+    return {
+      totalSum, totalCommission, perApp, perRefApp,
+      directCount: filteredApps.length,
+      refCount: filteredRefApps.length,
+    };
+  }, [filteredApps, filteredRefApps]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -153,7 +218,6 @@ const Dashboard = () => {
     setModalOpen(false);
     setForm({ clientName: "", clientContact: "", dates: "", comment: "", touristsCount: "1" });
 
-    // Send confirmation email (non-blocking)
     if (profile?.email) {
       supabase.functions.invoke("send-application-confirmation", {
         body: {
@@ -163,6 +227,39 @@ const Dashboard = () => {
           clientName: form.clientName,
         },
       }).catch((err) => console.error("Application confirmation email error:", err));
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    if (!userId) return;
+    setSavingProfile(true);
+
+    const profileCompleted = !!(profileForm.agency_name && profileForm.inn);
+
+    const { error } = await supabase.from("profiles").update({
+      ...profileForm,
+      profile_completed: profileCompleted,
+    } as any).eq("user_id", userId);
+
+    setSavingProfile(false);
+
+    if (error) {
+      toast({ title: "Ошибка", description: "Не удалось сохранить профиль.", variant: "destructive" });
+      return;
+    }
+
+    setProfile((prev: any) => ({ ...prev, ...profileForm, profile_completed: profileCompleted }));
+    toast({ title: "Профиль сохранён ✓" });
+  };
+
+  const refLink = profile?.ref_code
+    ? `https://aventuramani-partners.lovable.app/catalog?ref=${profile.ref_code}`
+    : "";
+
+  const copyRefLink = () => {
+    if (refLink) {
+      navigator.clipboard.writeText(refLink);
+      toast({ title: "Ссылка скопирована!" });
     }
   };
 
@@ -181,6 +278,7 @@ const Dashboard = () => {
       </header>
 
       <main className="max-w-5xl mx-auto px-4 py-8 space-y-10">
+        {/* Welcome */}
         <div className="bg-card rounded-2xl p-6 border border-border space-y-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
@@ -197,8 +295,98 @@ const Dashboard = () => {
           </div>
         </div>
 
+        {/* Profile incomplete hint */}
+        {isProfileIncomplete && (
+          <div className="bg-primary/10 border border-primary/30 rounded-xl p-4 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium">Заполните профиль, чтобы получать выплаты комиссий</p>
+              <p className="text-xs text-muted-foreground mt-1">Укажите реквизиты компании в разделе «Мой профиль» ниже.</p>
+            </div>
+          </div>
+        )}
+
+        {/* Referral link */}
+        {profile.ref_code && (
+          <div className="bg-card rounded-2xl p-6 border border-border space-y-4">
+            <h3 className="text-lg font-semibold text-primary flex items-center gap-2">
+              <Link2 className="w-5 h-5" /> Моя реферальная ссылка
+            </h3>
+            <div className="flex items-center gap-2">
+              <code className="bg-secondary px-3 py-2 rounded-lg text-sm flex-1 truncate border border-border">{refLink}</code>
+              <Button size="sm" variant="outline" onClick={copyRefLink}>
+                <Copy className="w-4 h-4 mr-1" /> Скопировать
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">Ваш реф-код: <span className="font-mono font-medium text-foreground">{profile.ref_code}</span></p>
+
+            <Collapsible open={instructionOpen} onOpenChange={setInstructionOpen}>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-foreground p-0 h-auto">
+                  {instructionOpen ? <ChevronUp className="w-3.5 h-3.5 mr-1" /> : <ChevronDown className="w-3.5 h-3.5 mr-1" />}
+                  Как работает реферальная ссылка
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-3">
+                <ol className="text-sm text-muted-foreground space-y-1.5 list-decimal list-inside bg-secondary/50 rounded-lg p-4">
+                  <li>Скопируйте вашу персональную ссылку</li>
+                  <li>Отправьте её клиенту любым удобным способом (мессенджер, email, соцсети)</li>
+                  <li>Клиент переходит по ссылке и видит каталог туров Aventura Mania</li>
+                  <li>Когда клиент оставляет заявку — она автоматически привязывается к вам</li>
+                  <li>Заявка появится в вашем кабинете в разделе «Мои заявки» с пометкой «По реф-ссылке»</li>
+                  <li>Комиссия начисляется после подтверждения тура</li>
+                </ol>
+              </CollapsibleContent>
+            </Collapsible>
+          </div>
+        )}
+
+        {/* Profile editor */}
+        <Collapsible open={profileOpen} onOpenChange={setProfileOpen}>
+          <div className="bg-card rounded-2xl border border-border overflow-hidden">
+            <CollapsibleTrigger asChild>
+              <button className="w-full p-6 flex items-center justify-between text-left hover:bg-secondary/30 transition-colors">
+                <h3 className="text-lg font-semibold text-primary flex items-center gap-2">
+                  <FileText className="w-5 h-5" /> Мой профиль
+                </h3>
+                {profileOpen ? <ChevronUp className="w-5 h-5 text-muted-foreground" /> : <ChevronDown className="w-5 h-5 text-muted-foreground" />}
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="px-6 pb-6 space-y-6">
+                <div className="space-y-3">
+                  <p className="text-sm font-medium text-muted-foreground">Агентство</p>
+                  <Input placeholder="Название агентства" value={profileForm.agency_name} onChange={(e) => setProfileForm({ ...profileForm, agency_name: e.target.value })} className="bg-secondary border-border" />
+                </div>
+                <div className="space-y-3">
+                  <p className="text-sm font-medium text-muted-foreground">Юридические реквизиты</p>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Input placeholder="Полное название организации" value={profileForm.legal_name} onChange={(e) => setProfileForm({ ...profileForm, legal_name: e.target.value })} className="bg-secondary border-border" />
+                    <Input placeholder="ИНН" value={profileForm.inn} onChange={(e) => setProfileForm({ ...profileForm, inn: e.target.value })} className="bg-secondary border-border" />
+                    <Input placeholder="КПП" value={profileForm.kpp} onChange={(e) => setProfileForm({ ...profileForm, kpp: e.target.value })} className="bg-secondary border-border" />
+                    <Input placeholder="ОГРН" value={profileForm.ogrn} onChange={(e) => setProfileForm({ ...profileForm, ogrn: e.target.value })} className="bg-secondary border-border" />
+                  </div>
+                  <Input placeholder="Юридический адрес" value={profileForm.legal_address} onChange={(e) => setProfileForm({ ...profileForm, legal_address: e.target.value })} className="bg-secondary border-border" />
+                </div>
+                <div className="space-y-3">
+                  <p className="text-sm font-medium text-muted-foreground">Банковские реквизиты</p>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Input placeholder="Название банка" value={profileForm.bank_name} onChange={(e) => setProfileForm({ ...profileForm, bank_name: e.target.value })} className="bg-secondary border-border" />
+                    <Input placeholder="БИК" value={profileForm.bik} onChange={(e) => setProfileForm({ ...profileForm, bik: e.target.value })} className="bg-secondary border-border" />
+                    <Input placeholder="Расчётный счёт" value={profileForm.account_number} onChange={(e) => setProfileForm({ ...profileForm, account_number: e.target.value })} className="bg-secondary border-border" />
+                    <Input placeholder="Корреспондентский счёт" value={profileForm.corr_account} onChange={(e) => setProfileForm({ ...profileForm, corr_account: e.target.value })} className="bg-secondary border-border" />
+                  </div>
+                </div>
+                <Button onClick={handleSaveProfile} disabled={savingProfile} className="bg-primary text-primary-foreground hover:bg-gold-glow">
+                  {savingProfile ? "Сохраняем..." : "Сохранить профиль"}
+                </Button>
+              </div>
+            </CollapsibleContent>
+          </div>
+        </Collapsible>
+
         {/* Stats */}
-        {applications.length > 0 && (
+        {(applications.length > 0 || refApplications.length > 0) && (
           <section className="space-y-4">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <h3 className="text-lg font-semibold text-primary flex items-center gap-2">
@@ -245,10 +433,14 @@ const Dashboard = () => {
                 </div>
               )}
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div className="bg-card rounded-xl p-4 border border-border text-center">
-                <p className="text-2xl font-bold text-foreground">{stats.count}</p>
-                <p className="text-xs text-muted-foreground">Заявок</p>
+                <p className="text-2xl font-bold text-foreground">{stats.directCount}</p>
+                <p className="text-xs text-muted-foreground flex items-center justify-center gap-1"><Users className="w-3 h-3" /> Прямые</p>
+              </div>
+              <div className="bg-card rounded-xl p-4 border border-border text-center">
+                <p className="text-2xl font-bold text-foreground">{stats.refCount}</p>
+                <p className="text-xs text-muted-foreground flex items-center justify-center gap-1"><Link2 className="w-3 h-3" /> По реф-ссылке</p>
               </div>
               <div className="bg-card rounded-xl p-4 border border-border text-center">
                 <p className="text-2xl font-bold text-foreground">{stats.totalSum.toLocaleString("ru-RU")} ₽</p>
@@ -262,14 +454,16 @@ const Dashboard = () => {
           </section>
         )}
 
+        {/* Applications list */}
         <section className="space-y-4">
           <h3 className="text-lg font-semibold text-primary">Мои заявки</h3>
-          {filteredApps.length === 0 ? (
+          {filteredApps.length === 0 && filteredRefApps.length === 0 ? (
             <p className="text-muted-foreground text-sm bg-card rounded-xl p-4 border border-border">
-              {applications.length === 0 ? "У вас пока нет заявок. Выберите тур из каталога ниже." : "Нет заявок за выбранный период."}
+              {applications.length === 0 && refApplications.length === 0 ? "У вас пока нет заявок. Выберите тур из каталога ниже." : "Нет заявок за выбранный период."}
             </p>
           ) : (
             <div className="space-y-2">
+              {/* Direct apps */}
               {filteredApps.map((app) => {
                 const appStat = stats.perApp.find((s) => s.id === app.id);
                 return (
@@ -292,10 +486,37 @@ const Dashboard = () => {
                   </div>
                 );
               })}
+              {/* Referral apps */}
+              {filteredRefApps.map((app) => {
+                const appStat = stats.perRefApp.find((s) => s.id === app.id);
+                return (
+                  <div key={`ref-${app.id}`} className="bg-card rounded-xl p-4 border border-border flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-sm">{app.tour_name}</p>
+                        <Badge className="text-[10px] bg-accent text-accent-foreground border-0 px-1.5 py-0">Реф-ссылка</Badge>
+                      </div>
+                      <p className="text-muted-foreground text-xs">
+                        {app.client_name} · {app.client_phone} · {new Date(app.created_at).toLocaleDateString("ru-RU")}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      {appStat && (
+                        <div className="text-right hidden sm:block">
+                          <p className="text-xs text-muted-foreground">{appStat.sum.toLocaleString("ru-RU")} ₽</p>
+                          <p className="text-xs text-primary font-medium">+{appStat.commission.toLocaleString("ru-RU")} ₽</p>
+                        </div>
+                      )}
+                      <Badge variant="outline" className="text-xs">Новая</Badge>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </section>
 
+        {/* Tour catalog */}
         <section className="space-y-4">
           <h3 className="text-lg font-semibold text-primary">Каталог туров</h3>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

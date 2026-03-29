@@ -30,17 +30,27 @@ const Catalog = () => {
   const [selectedTour, setSelectedTour] = useState("");
   const [form, setForm] = useState({ name: "", phone: "", email: "", comment: "" });
   const [submitting, setSubmitting] = useState(false);
-  const [refAgentId, setRefAgentId] = useState<string | null>(null);
+  const [resolvedAgentId, setResolvedAgentId] = useState<string | null>(null);
 
   useEffect(() => {
-    const ref = searchParams.get("ref");
-    if (ref) {
+    const resolveRef = async () => {
+      const ref = searchParams.get("ref") || sessionStorage.getItem("aventura_ref");
+      if (!ref) return;
+
       sessionStorage.setItem("aventura_ref", ref);
-      setRefAgentId(ref);
-    } else {
-      const stored = sessionStorage.getItem("aventura_ref");
-      if (stored) setRefAgentId(stored);
-    }
+
+      // Resolve ref code (AM-XXXX) to user_id
+      const { data } = await supabase
+        .from("profiles")
+        .select("user_id")
+        .eq("ref_code", ref)
+        .maybeSingle();
+
+      if (data?.user_id) {
+        setResolvedAgentId(data.user_id);
+      }
+    };
+    resolveRef();
   }, [searchParams]);
 
   const openModal = (tourName: string) => {
@@ -58,7 +68,7 @@ const Catalog = () => {
       client_phone: form.phone.trim(),
       client_email: form.email.trim() || null,
       comment: form.comment.trim() || null,
-      ref_agent_id: refAgentId || null,
+      ref_agent_id: resolvedAgentId || null,
     });
 
     setSubmitting(false);
