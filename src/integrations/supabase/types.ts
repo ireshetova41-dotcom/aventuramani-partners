@@ -91,27 +91,63 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_number: string | null
+          agency_name: string | null
+          bank_name: string | null
+          bik: string | null
+          corr_account: string | null
           created_at: string
           display_name: string | null
           email: string | null
           id: string
+          inn: string | null
+          kpp: string | null
+          legal_address: string | null
+          legal_name: string | null
+          ogrn: string | null
           phone: string | null
+          profile_completed: boolean | null
+          ref_code: string | null
           user_id: string
         }
         Insert: {
+          account_number?: string | null
+          agency_name?: string | null
+          bank_name?: string | null
+          bik?: string | null
+          corr_account?: string | null
           created_at?: string
           display_name?: string | null
           email?: string | null
           id?: string
+          inn?: string | null
+          kpp?: string | null
+          legal_address?: string | null
+          legal_name?: string | null
+          ogrn?: string | null
           phone?: string | null
+          profile_completed?: boolean | null
+          ref_code?: string | null
           user_id: string
         }
         Update: {
+          account_number?: string | null
+          agency_name?: string | null
+          bank_name?: string | null
+          bik?: string | null
+          corr_account?: string | null
           created_at?: string
           display_name?: string | null
           email?: string | null
           id?: string
+          inn?: string | null
+          kpp?: string | null
+          legal_address?: string | null
+          legal_name?: string | null
+          ogrn?: string | null
           phone?: string | null
+          profile_completed?: boolean | null
+          ref_code?: string | null
           user_id?: string
         }
         Relationships: []
@@ -139,6 +175,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_ref_code: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
