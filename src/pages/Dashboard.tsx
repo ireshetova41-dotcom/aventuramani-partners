@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,14 +7,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { LogOut, User, Star, Download, ExternalLink } from "lucide-react";
+import { LogOut, User, Star, Download, ExternalLink, CalendarDays } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
 import tourKamchatka from "@/assets/tour-kamchatka.jpg";
-import tourBaikal from "@/assets/tour-baikal.jpg";
+import tourBaikalSummer from "@/assets/tour-baikal-summer.jpg";
 import tourUzbekistan from "@/assets/tour-uzbekistan.jpg";
 import tourSakhalin from "@/assets/tour-sakhalin.jpg";
 import tourChina from "@/assets/tour-china.jpg";
+import tourKolsky from "@/assets/tour-kolsky.jpg";
 
 const STATUS_LABELS: Record<string, string> = {
   new: "Новая",
@@ -23,13 +24,33 @@ const STATUS_LABELS: Record<string, string> = {
   cancelled: "Отменена",
 };
 
+const COMMISSION_RATE = 0.1;
+
 const tours = [
   { id: 1, name: "Первооткрытие Камчатки", description: "Вулканы, гейзеры и Тихий океан — незабываемое путешествие на край земли.", image: tourKamchatka, price: 100, pdfUrl: "/tours/kamchatka.pdf", programUrl: "https://online.flippingbook.com/view/757254969/" },
-  { id: 2, name: "Все грани Байкала", description: "Глубочайшее озеро планеты: лёд, тайга и сибирское гостеприимство.", image: tourBaikal, price: 100, pdfUrl: "/tours/baikal.pdf", programUrl: "https://t.me/c/1579658397/28166" },
+  { id: 2, name: "Летний Байкал и Саяны", description: "Бирюзовые воды Байкала, горы Саян и сибирская тайга — летнее приключение мечты.", image: tourBaikalSummer, price: 100, pdfUrl: "/tours/baikal.pdf", programUrl: "https://t.me/c/1579658397/28166" },
   { id: 3, name: "Узбекистан", description: "Самарканд, Бухара, Хива — великий Шёлковый путь и восточное гостеприимство.", image: tourUzbekistan, price: 100, pdfUrl: "/tours/uzbekistan.pdf", programUrl: "https://online.flippingbook.com/view/381690940/" },
   { id: 4, name: "Сахалин и Итуруп", description: "Таинственные острова с вулканами, горячими источниками и океаном.", image: tourSakhalin, price: 100, pdfUrl: "/tours/sakhalin.pdf", programUrl: "https://online.flippingbook.com/view/144259978/" },
   { id: 5, name: "Южный Китай", description: "Карстовые горы, рисовые террасы и древние храмы юга Поднебесной.", image: tourChina, price: 100, pdfUrl: "/tours/china.pdf", programUrl: "https://online.flippingbook.com/view/363094287/" },
+  { id: 6, name: "Кольский полуостров", description: "Хибины, киты и тундра — летнее путешествие на Крайний Север России.", image: tourKolsky, price: 100, pdfUrl: "/tours/kolsky.pdf", programUrl: "https://online.flippingbook.com/view/86132119/" },
 ];
+
+type PeriodKey = "all" | "month" | "quarter" | "year";
+
+const PERIOD_OPTIONS: { key: PeriodKey; label: string }[] = [
+  { key: "all", label: "Все время" },
+  { key: "month", label: "Месяц" },
+  { key: "quarter", label: "Квартал" },
+  { key: "year", label: "Год" },
+];
+
+function getPeriodStart(key: PeriodKey): Date | null {
+  if (key === "all") return null;
+  const now = new Date();
+  if (key === "month") return new Date(now.getFullYear(), now.getMonth(), 1);
+  if (key === "quarter") return new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
+  return new Date(now.getFullYear(), 0, 1);
+}
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -39,6 +60,7 @@ const Dashboard = () => {
   const [selectedTour, setSelectedTour] = useState("");
   const [form, setForm] = useState({ clientName: "", clientContact: "", dates: "", comment: "", touristsCount: "1" });
   const [userId, setUserId] = useState<string | null>(null);
+  const [period, setPeriod] = useState<PeriodKey>("all");
 
   useEffect(() => {
     const init = async () => {
@@ -54,6 +76,28 @@ const Dashboard = () => {
     };
     init();
   }, [navigate]);
+
+  const filteredApps = useMemo(() => {
+    const start = getPeriodStart(period);
+    if (!start) return applications;
+    return applications.filter((a) => new Date(a.created_at) >= start);
+  }, [applications, period]);
+
+  const stats = useMemo(() => {
+    const tourPriceMap = new Map(tours.map((t) => [t.name, t.price]));
+    let totalSum = 0;
+    let totalCommission = 0;
+    const perApp = filteredApps.map((app) => {
+      const price = tourPriceMap.get(app.tour_name) || 100;
+      const count = app.tourists_count || 1;
+      const sum = price * count;
+      const commission = sum * COMMISSION_RATE;
+      totalSum += sum;
+      totalCommission += commission;
+      return { id: app.id, sum, commission };
+    });
+    return { totalSum, totalCommission, perApp, count: filteredApps.length };
+  }, [filteredApps]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -88,6 +132,18 @@ const Dashboard = () => {
     toast({ title: "Заявка отправлена!", description: `Тур: ${selectedTour}` });
     setModalOpen(false);
     setForm({ clientName: "", clientContact: "", dates: "", comment: "", touristsCount: "1" });
+
+    // Send confirmation email (non-blocking)
+    if (profile?.email) {
+      supabase.functions.invoke("send-application-confirmation", {
+        body: {
+          email: profile.email,
+          agentName: profile.display_name || "Агент",
+          tourName: selectedTour,
+          clientName: form.clientName,
+        },
+      }).catch((err) => console.error("Application confirmation email error:", err));
+    }
   };
 
   if (!profile) return null;
@@ -121,25 +177,74 @@ const Dashboard = () => {
           </div>
         </div>
 
+        {/* Stats */}
+        {applications.length > 0 && (
+          <section className="space-y-4">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <h3 className="text-lg font-semibold text-primary flex items-center gap-2">
+                <CalendarDays className="w-5 h-5" /> Статистика
+              </h3>
+              <div className="flex gap-1">
+                {PERIOD_OPTIONS.map((opt) => (
+                  <Button
+                    key={opt.key}
+                    variant={period === opt.key ? "default" : "outline"}
+                    size="sm"
+                    className="text-xs h-8"
+                    onClick={() => setPeriod(opt.key)}
+                  >
+                    {opt.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="bg-card rounded-xl p-4 border border-border text-center">
+                <p className="text-2xl font-bold text-foreground">{stats.count}</p>
+                <p className="text-xs text-muted-foreground">Заявок</p>
+              </div>
+              <div className="bg-card rounded-xl p-4 border border-border text-center">
+                <p className="text-2xl font-bold text-foreground">{stats.totalSum.toLocaleString("ru-RU")} ₽</p>
+                <p className="text-xs text-muted-foreground">Сумма</p>
+              </div>
+              <div className="bg-card rounded-xl p-4 border border-border text-center">
+                <p className="text-2xl font-bold text-primary">{stats.totalCommission.toLocaleString("ru-RU")} ₽</p>
+                <p className="text-xs text-muted-foreground">Комиссия (10%)</p>
+              </div>
+            </div>
+          </section>
+        )}
+
         <section className="space-y-4">
           <h3 className="text-lg font-semibold text-primary">Мои заявки</h3>
-          {applications.length === 0 ? (
+          {filteredApps.length === 0 ? (
             <p className="text-muted-foreground text-sm bg-card rounded-xl p-4 border border-border">
-              У вас пока нет заявок. Выберите тур из каталога ниже.
+              {applications.length === 0 ? "У вас пока нет заявок. Выберите тур из каталога ниже." : "Нет заявок за выбранный период."}
             </p>
           ) : (
             <div className="space-y-2">
-              {applications.map((app) => (
-                <div key={app.id} className="bg-card rounded-xl p-4 border border-border flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-sm">{app.tour_name}</p>
-                    <p className="text-muted-foreground text-xs">
-                      Клиент: {app.client_name} · {new Date(app.created_at).toLocaleDateString("ru-RU")}
-                    </p>
+              {filteredApps.map((app) => {
+                const appStat = stats.perApp.find((s) => s.id === app.id);
+                return (
+                  <div key={app.id} className="bg-card rounded-xl p-4 border border-border flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-medium text-sm">{app.tour_name}</p>
+                      <p className="text-muted-foreground text-xs">
+                        {app.client_name} · {app.tourists_count || 1} чел. · {new Date(app.created_at).toLocaleDateString("ru-RU")}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0">
+                      {appStat && (
+                        <div className="text-right hidden sm:block">
+                          <p className="text-xs text-muted-foreground">{appStat.sum.toLocaleString("ru-RU")} ₽</p>
+                          <p className="text-xs text-primary font-medium">+{appStat.commission.toLocaleString("ru-RU")} ₽</p>
+                        </div>
+                      )}
+                      <Badge variant="secondary" className="text-xs">{STATUS_LABELS[app.status] || app.status}</Badge>
+                    </div>
                   </div>
-                  <Badge variant="secondary" className="text-xs">{STATUS_LABELS[app.status] || app.status}</Badge>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>
