@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
+import { Checkbox } from "@/components/ui/checkbox";
 import ParticlesBackground from "@/components/ParticlesBackground";
 
 const Login = () => {
@@ -17,6 +18,8 @@ const Login = () => {
   const [signupMode, setSignupMode] = useState(false);
   const [signupName, setSignupName] = useState("");
   const [partnerForm, setPartnerForm] = useState({ name: "", email: "", phone: "", experience: "" });
+  const [consentPD, setConsentPD] = useState(false);
+  const [consentAds, setConsentAds] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +33,7 @@ const Login = () => {
       const { error } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { display_name: signupName } },
+        options: { data: { display_name: signupName, consent_ads: consentAds } },
       });
       setLoading(false);
       if (error) {
@@ -134,16 +137,49 @@ const Login = () => {
               className="bg-secondary border-border"
             />
           </div>
+          {signupMode && (
+            <div className="space-y-3">
+              <div className="flex items-start space-x-2">
+                <Checkbox
+                  id="consentPD"
+                  checked={consentPD}
+                  onCheckedChange={(v) => setConsentPD(v === true)}
+                  className="mt-0.5"
+                />
+                <label htmlFor="consentPD" className="text-xs text-muted-foreground leading-tight">
+                  Даю согласие на{" "}
+                  <a href="https://aventuramania.ru/soglasie_opd" target="_blank" rel="noopener" className="text-primary underline underline-offset-2">
+                    обработку персональных данных
+                  </a>{" "}
+                  <span className="text-destructive">*</span>
+                </label>
+              </div>
+              <div className="flex items-start space-x-2">
+                <Checkbox
+                  id="consentAds"
+                  checked={consentAds}
+                  onCheckedChange={(v) => setConsentAds(v === true)}
+                  className="mt-0.5"
+                />
+                <label htmlFor="consentAds" className="text-xs text-muted-foreground leading-tight">
+                  Согласен на получение{" "}
+                  <a href="https://aventuramania.ru/soglasie_rassilka" target="_blank" rel="noopener" className="text-primary underline underline-offset-2">
+                    информационных и рекламных сообщений
+                  </a>
+                </label>
+              </div>
+            </div>
+          )}
           <Button
             type="submit"
-            disabled={loading}
+            disabled={loading || (signupMode && !consentPD)}
             className="w-full bg-primary text-primary-foreground hover:bg-gold-glow font-semibold text-base h-12"
           >
             {loading ? "Загрузка..." : signupMode ? "Зарегистрироваться" : "Войти"}
           </Button>
           <button
             type="button"
-            onClick={() => setSignupMode(!signupMode)}
+            onClick={() => { setSignupMode(!signupMode); setConsentPD(false); setConsentAds(false); }}
             className="w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             {signupMode ? "Уже есть аккаунт? Войти" : "Нет аккаунта? Зарегистрироваться"}
