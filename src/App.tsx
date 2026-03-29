@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Login from "./pages/Login.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
 import Admin from "./pages/Admin.tsx";
+import Catalog from "./pages/Catalog.tsx";
 import Instructions from "./pages/Instructions.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/instructions" element={<Instructions />} />
+          <Route path="/catalog" element={<Catalog />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

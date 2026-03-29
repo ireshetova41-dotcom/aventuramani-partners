@@ -56,6 +56,39 @@ export type Database = {
         }
         Relationships: []
       }
+      client_applications: {
+        Row: {
+          client_email: string | null
+          client_name: string
+          client_phone: string
+          comment: string | null
+          created_at: string
+          id: string
+          ref_agent_id: string | null
+          tour_name: string
+        }
+        Insert: {
+          client_email?: string | null
+          client_name: string
+          client_phone: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          ref_agent_id?: string | null
+          tour_name: string
+        }
+        Update: {
+          client_email?: string | null
+          client_name?: string
+          client_phone?: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          ref_agent_id?: string | null
+          tour_name?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
