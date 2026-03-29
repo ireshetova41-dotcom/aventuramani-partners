@@ -1,13 +1,18 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { format } from "date-fns";
+import { ru } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { toast } from "@/hooks/use-toast";
-import { LogOut, User, Star, Download, ExternalLink, CalendarDays } from "lucide-react";
+import { LogOut, User, Star, Download, ExternalLink, CalendarDays, CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { Tables } from "@/integrations/supabase/types";
 
 import tourKamchatka from "@/assets/tour-kamchatka.jpg";
@@ -35,13 +40,14 @@ const tours = [
   { id: 6, name: "Кольский полуостров", description: "Хибины, киты и тундра — летнее путешествие на Крайний Север России.", image: tourKolsky, price: 100, pdfUrl: "/tours/kolsky.pdf", programUrl: "https://online.flippingbook.com/view/86132119/" },
 ];
 
-type PeriodKey = "all" | "month" | "quarter" | "year";
+type PeriodKey = "all" | "month" | "quarter" | "year" | "custom";
 
 const PERIOD_OPTIONS: { key: PeriodKey; label: string }[] = [
   { key: "all", label: "Все время" },
   { key: "month", label: "Месяц" },
   { key: "quarter", label: "Квартал" },
   { key: "year", label: "Год" },
+  { key: "custom", label: "Период" },
 ];
 
 function getPeriodStart(key: PeriodKey): Date | null {
@@ -61,6 +67,8 @@ const Dashboard = () => {
   const [form, setForm] = useState({ clientName: "", clientContact: "", dates: "", comment: "", touristsCount: "1" });
   const [userId, setUserId] = useState<string | null>(null);
   const [period, setPeriod] = useState<PeriodKey>("all");
+  const [customFrom, setCustomFrom] = useState<Date | undefined>();
+  const [customTo, setCustomTo] = useState<Date | undefined>();
 
   useEffect(() => {
     const init = async () => {
@@ -78,10 +86,22 @@ const Dashboard = () => {
   }, [navigate]);
 
   const filteredApps = useMemo(() => {
+    if (period === "custom") {
+      return applications.filter((a) => {
+        const d = new Date(a.created_at);
+        if (customFrom && d < customFrom) return false;
+        if (customTo) {
+          const end = new Date(customTo);
+          end.setHours(23, 59, 59, 999);
+          if (d > end) return false;
+        }
+        return true;
+      });
+    }
     const start = getPeriodStart(period);
     if (!start) return applications;
     return applications.filter((a) => new Date(a.created_at) >= start);
-  }, [applications, period]);
+  }, [applications, period, customFrom, customTo]);
 
   const stats = useMemo(() => {
     const tourPriceMap = new Map(tours.map((t) => [t.name, t.price]));
@@ -184,7 +204,7 @@ const Dashboard = () => {
               <h3 className="text-lg font-semibold text-primary flex items-center gap-2">
                 <CalendarDays className="w-5 h-5" /> Статистика
               </h3>
-              <div className="flex gap-1">
+              <div className="flex flex-wrap gap-1 items-center">
                 {PERIOD_OPTIONS.map((opt) => (
                   <Button
                     key={opt.key}
@@ -197,6 +217,33 @@ const Dashboard = () => {
                   </Button>
                 ))}
               </div>
+              {period === "custom" && (
+                <div className="flex gap-2 items-center flex-wrap mt-2">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className={cn("text-xs h-8 w-[140px] justify-start", !customFrom && "text-muted-foreground")}>
+                        <CalendarIcon className="w-3.5 h-3.5 mr-1.5" />
+                        {customFrom ? format(customFrom, "dd.MM.yyyy") : "С даты"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar mode="single" selected={customFrom} onSelect={setCustomFrom} locale={ru} initialFocus className="p-3 pointer-events-auto" />
+                    </PopoverContent>
+                  </Popover>
+                  <span className="text-muted-foreground text-xs">—</span>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className={cn("text-xs h-8 w-[140px] justify-start", !customTo && "text-muted-foreground")}>
+                        <CalendarIcon className="w-3.5 h-3.5 mr-1.5" />
+                        {customTo ? format(customTo, "dd.MM.yyyy") : "По дату"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar mode="single" selected={customTo} onSelect={setCustomTo} locale={ru} initialFocus className="p-3 pointer-events-auto" />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              )}
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div className="bg-card rounded-xl p-4 border border-border text-center">
