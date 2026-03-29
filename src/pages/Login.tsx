@@ -19,6 +19,7 @@ const Login = () => {
   const [signupName, setSignupName] = useState("");
   const [partnerForm, setPartnerForm] = useState({ name: "", email: "", phone: "", experience: "" });
   const [consentPD, setConsentPD] = useState(false);
+  const [consentPolicy, setConsentPolicy] = useState(false);
   const [consentAds, setConsentAds] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -141,6 +142,21 @@ const Login = () => {
             <div className="space-y-3">
               <div className="flex items-start space-x-2">
                 <Checkbox
+                  id="consentPolicy"
+                  checked={consentPolicy}
+                  onCheckedChange={(v) => setConsentPolicy(v === true)}
+                  className="mt-0.5"
+                />
+                <label htmlFor="consentPolicy" className="text-xs text-muted-foreground leading-tight">
+                  Ознакомлен(а) с{" "}
+                  <a href="https://aventuramania.ru/politika" target="_blank" rel="noopener" className="text-primary underline underline-offset-2">
+                    Политикой обработки персональных данных
+                  </a>{" "}
+                  <span className="text-destructive">*</span>
+                </label>
+              </div>
+              <div className="flex items-start space-x-2">
+                <Checkbox
                   id="consentPD"
                   checked={consentPD}
                   onCheckedChange={(v) => setConsentPD(v === true)}
@@ -172,14 +188,14 @@ const Login = () => {
           )}
           <Button
             type="submit"
-            disabled={loading || (signupMode && !consentPD)}
+            disabled={loading || (signupMode && (!consentPD || !consentPolicy))}
             className="w-full bg-primary text-primary-foreground hover:bg-gold-glow font-semibold text-base h-12"
           >
             {loading ? "Загрузка..." : signupMode ? "Зарегистрироваться" : "Войти"}
           </Button>
           <button
             type="button"
-            onClick={() => { setSignupMode(!signupMode); setConsentPD(false); setConsentAds(false); }}
+            onClick={() => { setSignupMode(!signupMode); setConsentPD(false); setConsentPolicy(false); setConsentAds(false); }}
             className="w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             {signupMode ? "Уже есть аккаунт? Войти" : "Нет аккаунта? Зарегистрироваться"}
