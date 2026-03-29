@@ -19,6 +19,7 @@ const Login = () => {
   const [signupName, setSignupName] = useState("");
   const [partnerForm, setPartnerForm] = useState({ name: "", email: "", phone: "", experience: "" });
   const [consentPD, setConsentPD] = useState(false);
+  const [consentPolicy, setConsentPolicy] = useState(false);
   const [consentAds, setConsentAds] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
