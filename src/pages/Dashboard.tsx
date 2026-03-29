@@ -32,12 +32,12 @@ const STATUS_LABELS: Record<string, string> = {
 const COMMISSION_RATE = 0.1;
 
 const tours = [
-  { id: 1, name: "Первооткрытие Камчатки", description: "Вулканы, гейзеры и Тихий океан — незабываемое путешествие на край земли.", image: tourKamchatka, price: 100, pdfUrl: "/tours/kamchatka.pdf", programUrl: "https://online.flippingbook.com/view/757254969/" },
-  { id: 2, name: "Летний Байкал и Саяны", description: "Бирюзовые воды Байкала, горы Саян и сибирская тайга — летнее приключение мечты.", image: tourBaikalSummer, price: 100, pdfUrl: "/tours/baikal.pdf", programUrl: "https://t.me/c/1579658397/28166" },
-  { id: 3, name: "Узбекистан", description: "Самарканд, Бухара, Хива — великий Шёлковый путь и восточное гостеприимство.", image: tourUzbekistan, price: 100, pdfUrl: "/tours/uzbekistan.pdf", programUrl: "https://online.flippingbook.com/view/381690940/" },
-  { id: 4, name: "Сахалин и Итуруп", description: "Таинственные острова с вулканами, горячими источниками и океаном.", image: tourSakhalin, price: 100, pdfUrl: "/tours/sakhalin.pdf", programUrl: "https://online.flippingbook.com/view/144259978/" },
-  { id: 5, name: "Южный Китай", description: "Карстовые горы, рисовые террасы и древние храмы юга Поднебесной.", image: tourChina, price: 100, pdfUrl: "/tours/china.pdf", programUrl: "https://online.flippingbook.com/view/363094287/" },
-  { id: 6, name: "Кольский полуостров", description: "Хибины, киты и тундра — летнее путешествие на Крайний Север России.", image: tourKolsky, price: 100, pdfUrl: "/tours/kolsky.pdf", programUrl: "https://online.flippingbook.com/view/86132119/" },
+  { id: 1, name: "Первооткрытие Камчатки", description: "Вулканы, гейзеры и Тихий океан — незабываемое путешествие на край земли.", image: tourKamchatka, price: 249900, pdfUrl: "/tours/kamchatka.pdf", programUrl: "https://online.flippingbook.com/view/757254969/" },
+  { id: 2, name: "Летний Байкал и Саяны", description: "Бирюзовые воды Байкала, горы Саян и сибирская тайга — летнее приключение мечты.", image: tourBaikalSummer, price: 134900, pdfUrl: "/tours/baikal.pdf", programUrl: "https://t.me/c/1579658397/28166" },
+  { id: 3, name: "Узбекистан", description: "Самарканд, Бухара, Хива — великий Шёлковый путь и восточное гостеприимство.", image: tourUzbekistan, price: 319900, pdfUrl: "/tours/uzbekistan.pdf", programUrl: "https://online.flippingbook.com/view/381690940/" },
+  { id: 4, name: "Сахалин и Итуруп", description: "Таинственные острова с вулканами, горячими источниками и океаном.", image: tourSakhalin, price: 94900, pdfUrl: "/tours/sakhalin.pdf", programUrl: "https://online.flippingbook.com/view/144259978/" },
+  { id: 5, name: "Южный Китай", description: "Карстовые горы, рисовые террасы и древние храмы юга Поднебесной.", image: tourChina, price: 126900, pdfUrl: "/tours/china.pdf", programUrl: "https://online.flippingbook.com/view/363094287/" },
+  { id: 6, name: "Кольский полуостров", description: "Хибины, киты и тундра — летнее путешествие на Крайний Север России.", image: tourKolsky, price: 289900, pdfUrl: "/tours/kolsky.pdf", programUrl: "https://online.flippingbook.com/view/86132119/" },
 ];
 
 type PeriodKey = "all" | "month" | "quarter" | "year" | "custom";
@@ -307,7 +307,7 @@ const Dashboard = () => {
                   <p className="text-muted-foreground text-xs leading-relaxed line-clamp-2">{tour.description}</p>
                   <div className="flex items-center justify-between">
                     <Badge className="w-fit bg-primary/20 text-primary border-0 text-xs">Комиссия 10%</Badge>
-                    <span className="text-primary font-bold text-sm">{tour.price} ₽ / чел.</span>
+                    <span className="text-primary font-bold text-sm">{tour.price.toLocaleString("ru-RU")} ₽ / чел.</span>
                   </div>
                   <div className="flex gap-2">
                     {tour.pdfUrl && (
